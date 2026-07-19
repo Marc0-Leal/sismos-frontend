@@ -1,0 +1,32 @@
+name: CI
+
+# Se ejecuta en cada push a las ramas del flujo y en cada PR hacia develop/main.
+on:
+  push:
+    branches: [main, develop, 'feature/**', 'release/**', 'hotfix/**']
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  calidad:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Habilita pnpm mediante corepack (usa la versión del campo packageManager).
+      - name: Habilitar pnpm
+        run: corepack enable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
