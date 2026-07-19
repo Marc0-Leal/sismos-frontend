@@ -102,7 +102,7 @@ export default function App() {
     <div className="app">
       <aside className="panel">
         <div className="topbar">
-          <h1>🌍 Sismos Mundo</h1>
+          <h1>🌍 TerraPulso</h1>
           <select
             className="lang-select"
             value={lang}
