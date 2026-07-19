@@ -9,8 +9,8 @@ Consume todo a través del **API gateway** (una sola URL base):
 ## Desarrollo
 
 ```bash
-npm install
-npm run dev        # http://localhost:5173
+pnpm install
+pnpm run dev        # http://localhost:5173
 ```
 
 Requiere que el gateway (y los microservicios) estén corriendo. Ver el README
@@ -36,5 +36,5 @@ src/
 ## Build
 
 ```bash
-npm run build      # genera dist/ (lo que se despliega en Vercel)
+pnpm run build      # genera dist/ (lo que se despliega en Vercel)
 ```
