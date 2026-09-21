@@ -55,6 +55,12 @@ const PULSE_MIN_MAG = 4.0;
 const PULSE_MS = 2200; // duración de un latido completo
 const PULSE_MAX_SCALE = 2.6; // cuánto llega a crecer el anillo
 
+// --- Rotación automática ----------------------------------------------------
+// El globo gira solo mientras nadie lo toca: transmite que el mapa está vivo.
+// Muy despacio a propósito (una vuelta completa cada 5 minutos): lo justo para
+// percibir movimiento sin marear ni competir con la lectura de los datos.
+const GRADOS_POR_SEGUNDO = 360 / 300;
+
 // --- Aspecto de los sismos según el mapa base -------------------------------
 // ETEREO: cada sismo se dibuja con tres capas superpuestas para que parezca luz
 // y no una pegatina: halo desenfocado + cuerpo translúcido + borde nítido.
@@ -307,6 +313,8 @@ export default function MapView({
   const quakesRef = useRef(quakes); // última lista recibida
   const tsunamiTipRef = useRef(null);
   const placasTipRef = useRef(null);
+  const interactuandoRef = useRef(false); // ¿el usuario está manipulando el mapa?
+  const girandoRef = useRef(true); // ¿rotación automática activa?
   const basemapRef = useRef(basemap); // mapa base aplicado actualmente
   const platesRef = useRef(plates); // ¿placas activadas?
   const platesDataRef = useRef(null); // GeoJSON cacheado tras la primera descarga
@@ -368,6 +376,40 @@ export default function MapView({
     // nativo para alternar entre globo y plano.
     map.addControl(new NavigationControl({ visualizePitch: true }), 'top-right');
     map.addControl(new GlobeControl(), 'top-right');
+
+    // --- Cesión del control al usuario ---------------------------------
+    // Se reacciona a APRETAR el botón (mousedown/touchstart/wheel), no a que el
+    // mapa empiece a moverse (movestart). El motivo es concreto: `setCenter()`,
+    // que usa la rotación automática, llama internamente a `stop()` y ese stop
+    // ABORTA cualquier gesto de cámara en curso. Con `movestart` la pausa
+    // llegaba tarde y cada frame de rotación mataba el arrastre recién
+    // iniciado, obligando a frenar el globo antes de poder moverlo.
+    //
+    // Esta misma bandera pausa la palpitación: mientras el usuario manipula el
+    // mapa, el hilo principal se dedica a cargar teselas y dibujar sismos.
+    const cederControl = () => {
+      interactuandoRef.current = true;
+      if (map.getLayer(PULSE_LAYER_ID)) {
+        map.setPaintProperty(PULSE_LAYER_ID, 'circle-stroke-opacity', 0, { validate: false });
+      }
+    };
+    const recuperarControl = () => {
+      interactuandoRef.current = false;
+    };
+
+    for (const ev of ['mousedown', 'touchstart', 'wheel', 'dragstart']) {
+      map.on(ev, cederControl);
+    }
+    for (const ev of ['mouseup', 'touchend', 'moveend']) {
+      map.on(ev, recuperarControl);
+    }
+
+    // Clic sobre el globo: alterna la rotación automática. Pulsar sobre un
+    // sismo también la detiene, que es justo lo que se quiere al ponerse a leer
+    // su ficha.
+    map.on('click', () => {
+      girandoRef.current = !girandoRef.current;
+    });
 
     // Los manejadores se registran UNA sola vez: sobreviven a los cambios de
     // estilo porque se enlazan por id de capa, y la capa se vuelve a crear con
@@ -491,12 +533,38 @@ export default function MapView({
   // --- Palpitación: anillo que crece y se desvanece ---
   // Se anima con requestAnimationFrame, que el navegador PAUSA solo cuando la
   // pestaña no está visible: sin gasto de batería en segundo plano.
+  // RENDIMIENTO: cada actualización obliga a MapLibre a validar y recompilar la
+  // expresión, re-evaluarla para cada sismo de la capa y volver a subir los
+  // datos a la GPU. A 60 fps y con miles de sismos (ventana de 7 días) eso
+  // compite con la carga de teselas y el mapa se siente pesado al arrastrar.
+  // Tres medidas, ninguna con coste visual:
+  //   1. Pausar mientras el usuario mueve el mapa (nadie mira el latido
+  //      mientras arrastra, y es justo cuando hace falta el hilo principal).
+  //   2. `validate: false`: la expresión la construimos aquí, ya sabemos que es
+  //      válida; no hace falta revalidarla en cada frame.
+  //   3. Limitar a ~30 fps: para un latido de 2,2 s es indistinguible de 60.
   useEffect(() => {
     let raf;
+    let ultimo = 0;
+    const MS_ENTRE_FRAMES = 33; // ~30 fps
+
     const animar = (ahora) => {
       raf = requestAnimationFrame(animar);
       const map = mapRef.current;
       if (!map || !listoRef.current || !map.getLayer(PULSE_LAYER_ID)) return;
+      if (interactuandoRef.current) return; // el usuario manda: todo cede el paso
+      if (ahora - ultimo < MS_ENTRE_FRAMES) return;
+      const dt = ultimo ? ahora - ultimo : 0;
+      ultimo = ahora;
+
+      // Rotación automática. Se calcula con el tiempo transcurrido (`dt`) y no
+      // con un incremento fijo por frame: así la velocidad es la misma en un
+      // equipo rápido que en uno lento.
+      if (girandoRef.current && dt > 0 && dt < 500) {
+        const centro = map.getCenter();
+        centro.lng += (GRADOS_POR_SEGUNDO * dt) / 1000;
+        map.setCenter(centro);
+      }
 
       // t recorre 0 -> 1 en cada latido.
       const t = (ahora % PULSE_MS) / PULSE_MS;
@@ -506,8 +574,9 @@ export default function MapView({
       // que es lo que da la sensación de onda que se disipa).
       const opacidad = 0.85 * (1 - t) * (1 - t);
 
-      map.setPaintProperty(PULSE_LAYER_ID, 'circle-radius', ['*', ['get', 'radio'], escala]);
-      map.setPaintProperty(PULSE_LAYER_ID, 'circle-stroke-opacity', opacidad);
+      const opts = { validate: false };
+      map.setPaintProperty(PULSE_LAYER_ID, 'circle-radius', ['*', ['get', 'radio'], escala], opts);
+      map.setPaintProperty(PULSE_LAYER_ID, 'circle-stroke-opacity', opacidad, opts);
     };
     raf = requestAnimationFrame(animar);
     return () => cancelAnimationFrame(raf);
