@@ -1,4 +1,4 @@
-# Frontend — TerraPulso
+# Frontend — Telura
 
 Mapa mundial de sismos en tiempo real. **React + Vite + Leaflet.**
 
