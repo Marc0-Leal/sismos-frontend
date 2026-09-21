@@ -54,6 +54,10 @@ const T = {
     basemap_satellite: '🛰️ Satélite',
     plates_label: 'Placas tectónicas',
     plate_boundary: 'Borde de placas',
+    window_label: 'Periodo:',
+    window_24: 'Últimas 24 h',
+    window_48: 'Últimas 48 h',
+    window_168: 'Últimos 7 días',
   },
   en: {
     subtitle: 'Real-time world earthquake map · data from USGS',
@@ -98,6 +102,10 @@ const T = {
     basemap_satellite: '🛰️ Satellite',
     plates_label: 'Tectonic plates',
     plate_boundary: 'Plate boundary',
+    window_label: 'Period:',
+    window_24: 'Last 24 h',
+    window_48: 'Last 48 h',
+    window_168: 'Last 7 days',
   },
   pt: {
     subtitle: 'Mapa mundial de sismos em tempo real · dados do USGS',
@@ -142,6 +150,10 @@ const T = {
     basemap_satellite: '🛰️ Satélite',
     plates_label: 'Placas tectónicas',
     plate_boundary: 'Limite de placas',
+    window_label: 'Período:',
+    window_24: 'Últimas 24 h',
+    window_48: 'Últimas 48 h',
+    window_168: 'Últimos 7 dias',
   },
   fr: {
     subtitle: 'Carte mondiale des séismes en temps réel · données USGS',
@@ -186,6 +198,10 @@ const T = {
     basemap_satellite: '🛰️ Satellite',
     plates_label: 'Plaques tectoniques',
     plate_boundary: 'Limite de plaques',
+    window_label: 'Période :',
+    window_24: 'Dernières 24 h',
+    window_48: 'Dernières 48 h',
+    window_168: '7 derniers jours',
   },
 };
 
