@@ -154,18 +154,68 @@ html, body, #root {
 .foot a { color: #93c5fd; text-decoration: none; }
 .foot a:hover { text-decoration: underline; }
 
-.map-wrap { flex: 1; position: relative; }
-.map { position: absolute; inset: 0; }
+/* Casilla de capa superpuesta (placas tectónicas) */
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.check-row input { cursor: pointer; }
+/* Muestra de color en forma de línea: indica que es un trazo, no un punto.
+   El color se pasa en línea desde React, porque cambia con el mapa base. */
+.swatch.line {
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+}
 
-/* Tooltip de aviso de tsunami al pasar el cursor */
-.tsunami-tip {
+/* Aviso del borde de placas al pasar el cursor */
+.placas-tip .maplibregl-popup-content {
+  background: #083344;
+  color: #cffafe;
+  border-color: #0e7490;
+  font-size: 12px;
+  padding: 6px 10px;
+}
+.placas-tip .maplibregl-popup-tip { display: none; }
+
+.map-wrap { flex: 1; position: relative; }
+/* Fondo oscuro = el "espacio" alrededor del globo terráqueo. */
+.map { position: absolute; inset: 0; background: #0b1220; }
+
+/* --- Popups de MapLibre adaptados al tema oscuro ---------------------------
+   Por defecto son blancos y desentonarían con la interfaz. Se estiliza el
+   contenido y también la "flecha" (tip) para que combine.                    */
+.maplibregl-popup-content {
+  background: #111827;
+  color: #e5e7eb;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 45%);
+}
+.maplibregl-popup-content a { color: #93c5fd; }
+.maplibregl-popup-close-button { color: #9ca3af; font-size: 16px; }
+.maplibregl-popup-close-button:hover { background: transparent; color: #fff; }
+.maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color: #374151; }
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: #374151; }
+.maplibregl-popup-anchor-left .maplibregl-popup-tip { border-right-color: #374151; }
+.maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color: #374151; }
+
+/* Aviso de tsunami al pasar el cursor (rojo, para que destaque del resto). */
+.tsunami-tip .maplibregl-popup-content {
   background: #7f1d1d;
   color: #fff;
-  border: 1px solid #ef4444;
+  border-color: #ef4444;
   font-weight: 600;
   font-size: 12px;
+  padding: 6px 10px;
 }
-.tsunami-tip::before { border-top-color: #7f1d1d; }
+.tsunami-tip .maplibregl-popup-tip { display: none; }
 
 @media (max-width: 720px) {
   .app { flex-direction: column; }
