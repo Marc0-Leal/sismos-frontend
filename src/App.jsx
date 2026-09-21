@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import MapView from './MapView.jsx';
+import { BASEMAPS } from './basemaps.js';
 import { fetchEarthquakes, subscribeToEarthquakes } from './api.js';
 import { LEGEND, colorForQuake, categoryOf, TERREMOTO_MIN } from './quakeStyle.js';
 import { computeStats } from './stats.js';
@@ -20,6 +21,8 @@ export default function App() {
   const [categoria, setCategoria] = useState('todos'); // todos | sismos | terremotos | tsunami
   const [sortBy, setSortBy] = useState('magnitude'); // magnitude (por defecto) | time
   const [lang, setLang] = useState('es');
+  const [basemap, setBasemap] = useState('noche');
+  const [plates, setPlates] = useState(false);
   const [highlightId, setHighlightId] = useState(null);
   const [focus, setFocus] = useState(null); // {id, lat, lon, nonce}
   const [lastUpdate, setLastUpdate] = useState(null);
@@ -207,6 +210,32 @@ export default function App() {
           </label>
         </div>
 
+        <div className="filter">
+          <label className="type-row">
+            {t(lang, 'basemap_label')}
+            <select value={basemap} onChange={(e) => setBasemap(e.target.value)}>
+              {BASEMAPS.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {t(lang, b.i18n)}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="check-row">
+            <input
+              type="checkbox"
+              checked={plates}
+              onChange={(e) => setPlates(e.target.checked)}
+            />
+            <span
+              className="swatch line"
+              style={{ background: BASEMAPS.find((b) => b.id === basemap)?.placasColor }}
+            />
+            {t(lang, 'plates_label')}
+          </label>
+        </div>
+
         <div className="legend">
           {LEGEND.map((l) => (
             <div key={l.label} className="legend-item">
@@ -289,7 +318,14 @@ export default function App() {
       </aside>
 
       <main className="map-wrap">
-        <MapView quakes={visibles} highlightId={highlightId} focus={focus} lang={lang} />
+        <MapView
+          quakes={visibles}
+          highlightId={highlightId}
+          focus={focus}
+          lang={lang}
+          basemap={basemap}
+          plates={plates}
+        />
       </main>
     </div>
   );
