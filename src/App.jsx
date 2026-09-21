@@ -1,10 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import MapView from './MapView.jsx';
+import Logo from './Logo.jsx';
 import { BASEMAPS } from './basemaps.js';
 import { fetchEarthquakes, subscribeToEarthquakes } from './api.js';
 import { LEGEND, colorForQuake, categoryOf, TERREMOTO_MIN } from './quakeStyle.js';
 import { computeStats } from './stats.js';
 import { LANGS, t } from './i18n.js';
+
+// Tope de seguridad. No es el criterio de que se muestra (eso lo decide la
+// ventana temporal), sino un cinturon para que una consulta no pueda devolver
+// una cantidad desmedida: 7 dias son ~1.700 sismos, asi que 5.000 da holgura.
+const MAX_SISMOS = 5000;
+
+// Ventanas temporales ofrecidas. 30 dias se descarto tras medirlo: 8.034 sismos
+// y 3 MB de descarga, demasiado para movil y visualmente saturado.
+const VENTANAS = [24, 48, 168];
 
 // Limita un valor al rango [lo, hi]. Si es NaN (campo vacío) devuelve lo.
 function clamp(value, lo, hi) {
@@ -22,23 +32,37 @@ export default function App() {
   const [sortBy, setSortBy] = useState('magnitude'); // magnitude (por defecto) | time
   const [lang, setLang] = useState('es');
   const [basemap, setBasemap] = useState('noche');
+  // Ventana temporal: se muestran los sismos de las ultimas N horas.
+  // Sustituye al antiguo "ultimos 500", que era un numero arbitrario y, peor,
+  // se encogia justo cuando mas interesa el mapa: tras un gran terremoto, sus
+  // cientos de replicas empujaban fuera todo lo demas.
+  const [hours, setHours] = useState(48);
   const [plates, setPlates] = useState(false);
   const [highlightId, setHighlightId] = useState(null);
   const [focus, setFocus] = useState(null); // {id, lat, lon, nonce}
   const [lastUpdate, setLastUpdate] = useState(null);
   const byId = useRef(new Set());
 
-  // Carga inicial (REST vía gateway).
+  // Carga (REST vía gateway). Se repite al cambiar la ventana temporal.
+  // El `limit` alto es solo un tope de seguridad: quien manda es `hours`.
   useEffect(() => {
-    fetchEarthquakes({ limit: 500 })
+    let cancelado = false;
+    setStatus('cargando');
+    fetchEarthquakes({ hours, limit: MAX_SISMOS })
       .then((list) => {
+        if (cancelado) return;
         byId.current = new Set(list.map((q) => q.id));
         setQuakes(list);
         setStatus('ok');
         setLastUpdate(new Date());
       })
-      .catch(() => setStatus('error'));
-  }, []);
+      .catch(() => {
+        if (!cancelado) setStatus('error');
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [hours]);
 
   // Suscripción en tiempo real (SSE vía gateway).
   useEffect(() => {
@@ -68,18 +92,24 @@ export default function App() {
     { value: 'tsunami', label: t(lang, 'cat_tsunami') },
   ];
 
-  const visibles = useMemo(
-    () =>
-      quakes.filter((q) => {
-        const m = q.magnitude ?? 0;
-        if (m < minMag || m > maxMag) return false;
-        if (categoria === 'tsunami') return !!q.tsunami;
-        if (categoria === 'sismos') return categoryOf(q) === 'sismo';
-        if (categoria === 'terremotos') return categoryOf(q) === 'terremoto';
-        return true; // 'todos'
-      }),
-    [quakes, minMag, maxMag, categoria]
-  );
+  const visibles = useMemo(() => {
+    // Instante a partir del cual un sismo sigue siendo visible. Se calcula aquí
+    // dentro para que se recalcule sola cada vez que cambian los sismos (por
+    // ejemplo al llegar uno nuevo por SSE) o la ventana elegida.
+    const corte = Date.now() - hours * 3600e3;
+    return quakes.filter((q) => {
+      // Filtro temporal también en cliente: los sismos que llegan en vivo por
+      // SSE se acumularian indefinidamente, y los antiguos deben ir saliendo
+      // de la ventana aunque no se recargue la pagina.
+      if (q.occurredAt && Date.parse(q.occurredAt) < corte) return false;
+      const m = q.magnitude ?? 0;
+      if (m < minMag || m > maxMag) return false;
+      if (categoria === 'tsunami') return !!q.tsunami;
+      if (categoria === 'sismos') return categoryOf(q) === 'sismo';
+      if (categoria === 'terremotos') return categoryOf(q) === 'terremoto';
+      return true; // 'todos'
+    });
+  }, [quakes, minMag, maxMag, categoria, hours]);
 
   // Lista lateral: por magnitud (mayor→menor, por defecto) o por hora.
   const ultimos = useMemo(() => {
@@ -105,7 +135,10 @@ export default function App() {
     <div className="app">
       <aside className="panel">
         <div className="topbar">
-          <h1>🌍 TerraPulso</h1>
+          <h1>
+            <Logo />
+            Telura
+          </h1>
           <select
             className="lang-select"
             value={lang}
@@ -199,6 +232,19 @@ export default function App() {
 
         <div className="filter">
           <label className="type-row">
+            {t(lang, 'window_label')}
+            <select value={hours} onChange={(e) => setHours(Number(e.target.value))}>
+              {VENTANAS.map((h) => (
+                <option key={h} value={h}>
+                  {t(lang, `window_${h}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className="filter">
+          <label className="type-row">
             {t(lang, 'event_type')}
             <select value={categoria} onChange={(e) => setCategoria(e.target.value)}>
               {categorias.map((c) => (
@@ -223,11 +269,7 @@ export default function App() {
           </label>
 
           <label className="check-row">
-            <input
-              type="checkbox"
-              checked={plates}
-              onChange={(e) => setPlates(e.target.checked)}
-            />
+            <input type="checkbox" checked={plates} onChange={(e) => setPlates(e.target.checked)} />
             <span
               className="swatch line"
               style={{ background: BASEMAPS.find((b) => b.id === basemap)?.placasColor }}
