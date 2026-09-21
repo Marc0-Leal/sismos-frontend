@@ -30,7 +30,15 @@ html, body, #root {
 }
 
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.panel h1 { font-size: 23px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.01em; }
+.panel h1 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 23px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  letter-spacing: -0.01em;
+}
 .sub { margin: 0 0 16px; font-size: 13.5px; color: #aeb8c6; }
 
 .lang-select {

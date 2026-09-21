@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import MapView from './MapView.jsx';
+import Logo from './Logo.jsx';
 import { BASEMAPS } from './basemaps.js';
 import { fetchEarthquakes, subscribeToEarthquakes } from './api.js';
 import { LEGEND, colorForQuake, categoryOf, TERREMOTO_MIN } from './quakeStyle.js';
@@ -134,7 +135,10 @@ export default function App() {
     <div className="app">
       <aside className="panel">
         <div className="topbar">
-          <h1>🌍 Telura</h1>
+          <h1>
+            <Logo />
+            Telura
+          </h1>
           <select
             className="lang-select"
             value={lang}
