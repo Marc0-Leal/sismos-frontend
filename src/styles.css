@@ -1,11 +1,23 @@
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
-html, body, #root {
+html,
+body,
+#root {
   margin: 0;
   height: 100%;
   /* Tipografía más legible: pila de fuentes modernas + suavizado. */
-  font-family: 'Segoe UI', 'Inter', 'Helvetica Neue', -apple-system,
-    BlinkMacSystemFont, system-ui, Roboto, Arial, sans-serif;
+  font-family:
+    'Segoe UI',
+    'Inter',
+    'Helvetica Neue',
+    -apple-system,
+    BlinkMacSystemFont,
+    system-ui,
+    Roboto,
+    Arial,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-size: 15px;
@@ -16,6 +28,11 @@ html, body, #root {
 .app {
   display: flex;
   height: 100vh;
+  /* dvh = "dynamic viewport height": en móvil descuenta la barra del navegador,
+     que aparece y desaparece al hacer scroll. Con 100vh a secas, el final de la
+     página queda tapado. El 100vh de arriba es el respaldo para navegadores
+     antiguos. */
+  height: 100dvh;
   color: #eef2f7;
   background: #0f172a;
 }
@@ -29,7 +46,12 @@ html, body, #root {
   border-right: 1px solid #1f2937;
 }
 
-.topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
 .panel h1 {
   display: flex;
   align-items: center;
@@ -39,7 +61,11 @@ html, body, #root {
   margin: 0 0 4px;
   letter-spacing: -0.01em;
 }
-.sub { margin: 0 0 16px; font-size: 13.5px; color: #aeb8c6; }
+.sub {
+  margin: 0 0 16px;
+  font-size: 13.5px;
+  color: #aeb8c6;
+}
 
 .lang-select {
   padding: 5px 8px;
@@ -51,16 +77,48 @@ html, body, #root {
   cursor: pointer;
 }
 
-.status-row { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 16px; }
-.dot { width: 10px; height: 10px; border-radius: 50%; }
-.dot.on { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
-.dot.off { background: #ef4444; }
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.dot.on {
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
+}
+.dot.off {
+  background: #ef4444;
+}
 
-.filter { display: block; font-size: 13px; margin-bottom: 16px; }
-.filter-head { margin-bottom: 8px; }
-.range-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.range-row span { width: 42px; color: #9ca3af; font-size: 12px; }
-.range-row input[type="range"] { flex: 1; }
+.filter {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.filter-head {
+  margin-bottom: 8px;
+}
+.range-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.range-row span {
+  width: 42px;
+  color: #9ca3af;
+  font-size: 12px;
+}
+.range-row input[type='range'] {
+  flex: 1;
+}
 .range-row .num {
   width: 52px;
   padding: 4px 6px;
@@ -71,7 +129,13 @@ html, body, #root {
   border-radius: 6px;
   text-align: center;
 }
-.type-row { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 10px; }
+.type-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
 .type-row select {
   flex: 1;
   padding: 5px 6px;
@@ -81,10 +145,24 @@ html, body, #root {
   border: 1px solid #1f2937;
   border-radius: 6px;
 }
-.check-row { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
-.check-row input { width: 15px; height: 15px; cursor: pointer; }
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.check-row input {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
 
-.range-presets { display: flex; gap: 6px; margin-top: 8px; }
+.range-presets {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
 .preset {
   flex: 1;
   padding: 5px 4px;
@@ -95,13 +173,35 @@ html, body, #root {
   border-radius: 6px;
   cursor: pointer;
 }
-.preset:hover { background: #1e293b; border-color: #334155; }
+.preset:hover {
+  background: #1e293b;
+  border-color: #334155;
+}
 
-.legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-bottom: 16px; }
-.legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #cbd5e1; }
-.swatch { width: 12px; height: 12px; border-radius: 3px; }
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-bottom: 16px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #cbd5e1;
+}
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
 
-.count { font-size: 13px; color: #93c5fd; margin-bottom: 12px; }
+.count {
+  font-size: 13px;
+  color: #93c5fd;
+  margin-bottom: 12px;
+}
 
 .stats {
   display: grid;
@@ -118,11 +218,31 @@ html, body, #root {
   border: 1px solid #1f2937;
   border-radius: 8px;
 }
-.stat-num { font-size: 17px; font-weight: 700; color: #e5e7eb; }
-.stat-lbl { font-size: 10px; color: #9ca3af; margin-top: 2px; text-align: center; }
+.stat-num {
+  font-size: 17px;
+  font-weight: 700;
+  color: #e5e7eb;
+}
+.stat-lbl {
+  font-size: 10px;
+  color: #9ca3af;
+  margin-top: 2px;
+  text-align: center;
+}
 
-.list-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0; }
-.panel h2 { font-size: 15.5px; font-weight: 700; margin: 0; color: #eef2f7; }
+.list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 8px 0;
+}
+.panel h2 {
+  font-size: 15.5px;
+  font-weight: 700;
+  margin: 0;
+  color: #eef2f7;
+}
 .sort-select {
   padding: 4px 6px;
   font-size: 11.5px;
@@ -132,7 +252,11 @@ html, body, #root {
   border-radius: 6px;
   cursor: pointer;
 }
-.list { list-style: none; margin: 0; padding: 0; }
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
 .list li {
   font-size: 13.5px;
   padding: 8px 6px;
@@ -144,12 +268,32 @@ html, body, #root {
   border-radius: 6px;
   transition: background 0.12s;
 }
-.list li:hover { background: #1e293b; }
-.list li b { font-weight: 700; min-width: 42px; }
-.list .place { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.list .time { margin-left: auto; color: #6b7280; font-size: 11px; white-space: nowrap; }
+.list li:hover {
+  background: #1e293b;
+}
+.list li b {
+  font-weight: 700;
+  min-width: 42px;
+}
+.list .place {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.list .time {
+  margin-left: auto;
+  color: #6b7280;
+  font-size: 11px;
+  white-space: nowrap;
+}
 
-.empty { font-size: 12.5px; color: #9ca3af; font-style: italic; padding: 6px 0; }
+.empty {
+  font-size: 12.5px;
+  color: #9ca3af;
+  font-style: italic;
+  padding: 6px 0;
+}
 
 .foot {
   margin-top: 18px;
@@ -159,8 +303,13 @@ html, body, #root {
   color: #6b7280;
   line-height: 1.6;
 }
-.foot a { color: #93c5fd; text-decoration: none; }
-.foot a:hover { text-decoration: underline; }
+.foot a {
+  color: #93c5fd;
+  text-decoration: none;
+}
+.foot a:hover {
+  text-decoration: underline;
+}
 
 /* Casilla de capa superpuesta (placas tectónicas) */
 .check-row {
@@ -171,7 +320,9 @@ html, body, #root {
   font-size: 13px;
   cursor: pointer;
 }
-.check-row input { cursor: pointer; }
+.check-row input {
+  cursor: pointer;
+}
 /* Muestra de color en forma de línea: indica que es un trazo, no un punto.
    El color se pasa en línea desde React, porque cambia con el mapa base. */
 .swatch.line {
@@ -188,11 +339,20 @@ html, body, #root {
   font-size: 12px;
   padding: 6px 10px;
 }
-.placas-tip .maplibregl-popup-tip { display: none; }
+.placas-tip .maplibregl-popup-tip {
+  display: none;
+}
 
-.map-wrap { flex: 1; position: relative; }
+.map-wrap {
+  flex: 1;
+  position: relative;
+}
 /* Fondo oscuro = el "espacio" alrededor del globo terráqueo. */
-.map { position: absolute; inset: 0; background: #0b1220; }
+.map {
+  position: absolute;
+  inset: 0;
+  background: #0b1220;
+}
 
 /* --- Popups de MapLibre adaptados al tema oscuro ---------------------------
    Por defecto son blancos y desentonarían con la interfaz. Se estiliza el
@@ -206,27 +366,136 @@ html, body, #root {
   font-size: 13px;
   box-shadow: 0 6px 20px rgb(0 0 0 / 45%);
 }
-.maplibregl-popup-content a { color: #93c5fd; }
-.maplibregl-popup-close-button { color: #9ca3af; font-size: 16px; }
-.maplibregl-popup-close-button:hover { background: transparent; color: #fff; }
-.maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color: #374151; }
-.maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: #374151; }
-.maplibregl-popup-anchor-left .maplibregl-popup-tip { border-right-color: #374151; }
-.maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color: #374151; }
+.maplibregl-popup-content a {
+  color: #93c5fd;
+}
+.maplibregl-popup-close-button {
+  color: #9ca3af;
+  font-size: 16px;
+}
+.maplibregl-popup-close-button:hover {
+  background: transparent;
+  color: #fff;
+}
+.maplibregl-popup-anchor-top .maplibregl-popup-tip {
+  border-bottom-color: #374151;
+}
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+  border-top-color: #374151;
+}
+.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: #374151;
+}
+.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: #374151;
+}
 
 /* Aviso de tsunami al pasar el cursor (rojo, para que destaque del resto). */
-.tsunami-tip .maplibregl-popup-content {
-  background: #7f1d1d;
-  color: #fff;
-  border-color: #ef4444;
-  font-weight: 600;
-  font-size: 12px;
+/* Ficha resumida al pasar el cursor por un sismo. Es neutra: antes era roja
+   porque solo aparecia en tsunamis; ahora sale en todos, asi que el rojo se
+   reserva para el aviso que va dentro. */
+.quake-tip .maplibregl-popup-content {
+  background: #0f172a;
+  color: #e5e7eb;
+  border-color: #334155;
+  font-size: 12.5px;
   padding: 6px 10px;
+  max-width: 230px;
 }
-.tsunami-tip .maplibregl-popup-tip { display: none; }
+.quake-tip .maplibregl-popup-tip {
+  display: none;
+}
+.tip-tsunami {
+  color: #fca5a5;
+  font-weight: 600;
+}
 
+/* Asa para desplegar el panel. Solo existe en móvil. */
+.panel-handle {
+  display: none;
+}
+
+/* --- Móvil: el mapa manda --------------------------------------------------
+   En la versión anterior el panel se llevaba el 42% de la pantalla y el mapa
+   —que es el producto— se quedaba con lo que sobraba. Se invierte: el mapa
+   ocupa todo y el panel pasa a ser una hoja deslizante sobre él, plegada por
+   defecto. Es el patrón de Google Maps o Citymapper.                        */
 @media (max-width: 720px) {
-  .app { flex-direction: column; }
-  .panel { width: 100%; height: 42vh; border-right: none; border-bottom: 1px solid #1f2937; }
-  .map-wrap { flex: 1; }
+  .app {
+    display: block;
+    position: relative;
+  }
+
+  /* El mapa, a pantalla completa y por debajo de todo. */
+  .map-wrap {
+    position: absolute;
+    inset: 0;
+  }
+
+  .panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: 62dvh;
+    padding: 0 16px 20px;
+    border-right: none;
+    border-top: 1px solid #1f2937;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -10px 30px rgb(0 0 0 / 45%);
+    transition: max-height 0.25s ease;
+    /* Respeta la zona del gesto de inicio en móviles sin botón físico. */
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+
+  /* Plegado: asoma lo justo para ver el nombre, el estado y las estadísticas. */
+  .panel:not(.abierto) {
+    max-height: 132px;
+    overflow: hidden;
+  }
+
+  /* El asa queda fija arriba del panel aunque se desplace su contenido. */
+  .panel-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    width: 100%;
+    /* 44 px es el mínimo recomendado para un objetivo táctil. */
+    min-height: 44px;
+    margin-bottom: 4px;
+    padding: 0;
+    font: inherit;
+    font-size: 12.5px;
+    color: #9ca3af;
+    background: #111827;
+    border: none;
+    cursor: pointer;
+  }
+  /* La barrita gris de "tirador". */
+  .panel-handle::before {
+    content: '';
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: #374151;
+  }
+
+  .panel h1 {
+    font-size: 20px;
+  }
+  .sub {
+    display: none;
+  } /* el subtítulo sobra en una pantalla pequeña */
+
+  /* Objetivos táctiles más generosos. */
+  .preset,
+  .panel select,
+  .num {
+    min-height: 38px;
+  }
 }

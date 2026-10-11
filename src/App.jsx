@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import MapView from './MapView.jsx';
 import Logo from './Logo.jsx';
 import { BASEMAPS } from './basemaps.js';
-import { fetchEarthquakes, subscribeToEarthquakes } from './api.js';
+import { fetchEarthquakes, fetchTotal, subscribeToEarthquakes } from './api.js';
 import { LEGEND, colorForQuake, categoryOf, TERREMOTO_MIN } from './quakeStyle.js';
 import { computeStats } from './stats.js';
 import { LANGS, t } from './i18n.js';
@@ -38,9 +38,16 @@ export default function App() {
   // cientos de replicas empujaban fuera todo lo demas.
   const [hours, setHours] = useState(48);
   const [plates, setPlates] = useState(false);
+  // Solo tiene efecto en movil (ver styles.css): el panel es una hoja
+  // deslizante sobre el mapa. Arranca plegado para que lo primero que se vea
+  // al abrir en el telefono sea el globo, no una lista de filtros.
+  const [panelAbierto, setPanelAbierto] = useState(false);
   const [highlightId, setHighlightId] = useState(null);
   const [focus, setFocus] = useState(null); // {id, lat, lon, nonce}
   const [lastUpdate, setLastUpdate] = useState(null);
+  // Total historico en la base. Da contexto: el mapa ensena los de la ventana
+  // elegida, pero detras hay decenas de miles acumulados.
+  const [total, setTotal] = useState(null);
   const byId = useRef(new Set());
 
   // Carga (REST vía gateway). Se repite al cambiar la ventana temporal.
@@ -63,6 +70,14 @@ export default function App() {
       cancelado = true;
     };
   }, [hours]);
+
+  // Total historico. Se pide una sola vez: no cambia lo bastante rapido como
+  // para justificar refrescarlo, y si falla la cifra simplemente no se muestra.
+  useEffect(() => {
+    fetchTotal()
+      .then(setTotal)
+      .catch(() => setTotal(null));
+  }, []);
 
   // Suscripción en tiempo real (SSE vía gateway).
   useEffect(() => {
@@ -133,7 +148,13 @@ export default function App() {
 
   return (
     <div className="app">
-      <aside className="panel">
+      <aside className={panelAbierto ? 'panel abierto' : 'panel'}>
+        <button
+          className="panel-handle"
+          onClick={() => setPanelAbierto((v) => !v)}
+          aria-expanded={panelAbierto}
+          aria-label={t(lang, panelAbierto ? 'panel_hide' : 'panel_show')}
+        />
         <div className="topbar">
           <h1>
             <Logo />
@@ -290,7 +311,13 @@ export default function App() {
         <div className="count">
           {status === 'cargando' && t(lang, 'loading')}
           {status === 'error' && t(lang, 'error')}
-          {status === 'ok' && t(lang, 'shown', { n: visibles.length })}
+          {status === 'ok' &&
+            (total != null
+              ? t(lang, 'shown_total', {
+                  n: visibles.length,
+                  total: total.toLocaleString(),
+                })
+              : t(lang, 'shown', { n: visibles.length }))}
         </div>
 
         {status === 'ok' && (
