@@ -410,11 +410,18 @@ export default function MapView({
       map.on(ev, recuperarControl);
     }
 
-    // Clic sobre el globo: alterna la rotación automática. Pulsar sobre un
-    // sismo también la detiene, que es justo lo que se quiere al ponerse a leer
-    // su ficha.
-    map.on('click', () => {
-      girandoRef.current = !girandoRef.current;
+    // Clic sobre el globo y rotación automática.
+    //
+    // No todos los clics significan lo mismo, así que no pueden hacer lo mismo:
+    //   - Sobre un dato (un sismo o una placa) -> SIEMPRE detiene el giro. Si
+    //     alternase, examinar dos sismos seguidos lo reanudaría justo cuando el
+    //     usuario se ha parado a leer, y el detalle se le escaparía de la vista.
+    //   - Sobre el globo vacío -> alterna, que es la forma natural de volver a
+    //     ponerlo en marcha.
+    map.on('click', (e) => {
+      const capas = [LAYER_ID, PLATES_LAYER_ID].filter((id) => map.getLayer(id));
+      const sobreUnDato = map.queryRenderedFeatures(e.point, { layers: capas }).length > 0;
+      girandoRef.current = sobreUnDato ? false : !girandoRef.current;
     });
 
     // Los manejadores se registran UNA sola vez: sobreviven a los cambios de
@@ -615,6 +622,10 @@ export default function MapView({
   useEffect(() => {
     const map = mapRef.current;
     if (!focus || !map || !listoRef.current) return;
+    // Elegir un sismo en la lista es la misma intención que pulsarlo en el
+    // mapa: detener el giro. Si no, el vuelo acaba y el globo se lleva el
+    // sismo fuera de la vista mientras se está leyendo su ficha.
+    girandoRef.current = false;
     map.flyTo({ center: [focus.lon, focus.lat], zoom: Math.max(map.getZoom(), 4), speed: 0.8 });
     const q = quakeById.current.get(focus.id);
     if (q) abrirPopup(map, q, lang);
