@@ -172,6 +172,12 @@ function aplicarCapasSismos(map, basemap) {
     console.warn('[MapView] Globo/cielo no disponibles, se sigue en plano:', err.message);
   }
 
+  // Repinta el agua si el mapa base lo pide (ver comentario en basemaps.js).
+  // Se comprueba que la capa exista: el estilo de satelite no tiene ninguna.
+  if (basemap.aguaColor && map.getLayer('water')) {
+    map.setPaintProperty('water', 'fill-color', basemap.aguaColor);
+  }
+
   if (!map.getSource(SOURCE_ID)) {
     map.addSource(SOURCE_ID, { type: 'geojson', data: toGeoJson([]) });
   }
@@ -311,7 +317,7 @@ export default function MapView({
   const quakeById = useRef(new Map()); // id -> datos (para popups y re-traducción)
   const langRef = useRef(lang); // idioma actual accesible desde los manejadores
   const quakesRef = useRef(quakes); // última lista recibida
-  const tsunamiTipRef = useRef(null);
+  const fichaTipRef = useRef(null);
   const placasTipRef = useRef(null);
   const interactuandoRef = useRef(false); // ¿el usuario está manipulando el mapa?
   const girandoRef = useRef(true); // ¿rotación automática activa?
@@ -355,12 +361,12 @@ export default function MapView({
       console.error('[MapView] Error de MapLibre:', e.error?.message ?? e);
     });
 
-    // Globo flotante reutilizable para el aviso de tsunami (no roba el foco ni
-    // cierra el popup de detalle).
-    tsunamiTipRef.current = new Popup({
+    // Globo flotante reutilizable para la ficha al pasar el cursor. No roba el
+    // foco ni cierra el popup de detalle que se abre al hacer clic.
+    fichaTipRef.current = new Popup({
       closeButton: false,
       closeOnClick: false,
-      className: 'tsunami-tip',
+      className: 'quake-tip',
       offset: 12,
     });
 
@@ -404,31 +410,46 @@ export default function MapView({
       map.on(ev, recuperarControl);
     }
 
-    // Clic sobre el globo: alterna la rotación automática. Pulsar sobre un
-    // sismo también la detiene, que es justo lo que se quiere al ponerse a leer
-    // su ficha.
-    map.on('click', () => {
-      girandoRef.current = !girandoRef.current;
+    // Clic sobre el globo y rotación automática.
+    //
+    // No todos los clics significan lo mismo, así que no pueden hacer lo mismo:
+    //   - Sobre un dato (un sismo o una placa) -> SIEMPRE detiene el giro. Si
+    //     alternase, examinar dos sismos seguidos lo reanudaría justo cuando el
+    //     usuario se ha parado a leer, y el detalle se le escaparía de la vista.
+    //   - Sobre el globo vacío -> alterna, que es la forma natural de volver a
+    //     ponerlo en marcha.
+    map.on('click', (e) => {
+      const capas = [LAYER_ID, PLATES_LAYER_ID].filter((id) => map.getLayer(id));
+      const sobreUnDato = map.queryRenderedFeatures(e.point, { layers: capas }).length > 0;
+      girandoRef.current = sobreUnDato ? false : !girandoRef.current;
     });
 
     // Los manejadores se registran UNA sola vez: sobreviven a los cambios de
     // estilo porque se enlazan por id de capa, y la capa se vuelve a crear con
     // el mismo id.
+    // Al pasar el cursor por un sismo se muestra su ficha resumida, sin hacer
+    // clic. Es deliberadamente breve —magnitud y lugar— porque el detalle
+    // completo (profundidad, fecha, enlace a USGS) ya lo da el clic: si el
+    // aviso flotante lo repitiese todo, el clic dejaría de tener sentido.
     map.on('mousemove', LAYER_ID, (e) => {
       map.getCanvas().style.cursor = 'pointer';
       const feat = e.features?.[0];
-      if (feat?.properties.tsunami) {
-        tsunamiTipRef.current
-          .setLngLat(feat.geometry.coordinates)
-          .setHTML(esc(t(langRef.current, 'tooltip_tsunami')))
-          .addTo(map);
-      } else {
-        tsunamiTipRef.current?.remove();
-      }
+      if (!feat) return;
+      const q = quakeById.current.get(feat.properties.id);
+      if (!q) return;
+
+      const mag = q.magnitude != null ? `M ${esc(q.magnitude)}` : 'M ?';
+      const aviso = q.tsunami
+        ? `<br/><span class="tip-tsunami">${esc(t(langRef.current, 'tooltip_tsunami'))}</span>`
+        : '';
+      fichaTipRef.current
+        .setLngLat(feat.geometry.coordinates)
+        .setHTML(`<strong>${mag}</strong> · ${esc(q.place ?? '—')}${aviso}`)
+        .addTo(map);
     });
     map.on('mouseleave', LAYER_ID, () => {
       map.getCanvas().style.cursor = '';
-      tsunamiTipRef.current?.remove();
+      fichaTipRef.current?.remove();
     });
     // Al pasar el cursor por un borde de placa, se muestra qué dos placas
     // separa. Los datos solo traen códigos ("NZ-SA"): plateName() los traduce.
@@ -465,7 +486,7 @@ export default function MapView({
 
     return () => {
       popupRef.current?.remove();
-      tsunamiTipRef.current?.remove();
+      fichaTipRef.current?.remove();
       placasTipRef.current?.remove();
       map.remove();
       listoRef.current = false;
@@ -481,7 +502,7 @@ export default function MapView({
     const bm = BASEMAPS.find((b) => b.id === basemap) ?? BASEMAPS[0];
     basemapRef.current = basemap;
     popupRef.current?.remove();
-    tsunamiTipRef.current?.remove();
+    fichaTipRef.current?.remove();
     // `diff: false` es CLAVE. Por defecto setStyle compara el estilo viejo con
     // el nuevo y aplica solo las diferencias. Entre dos estilos parecidos (p. ej.
     // los dos de Carto, que comparten nombre de fuente y capas) ese atajo se
@@ -601,6 +622,10 @@ export default function MapView({
   useEffect(() => {
     const map = mapRef.current;
     if (!focus || !map || !listoRef.current) return;
+    // Elegir un sismo en la lista es la misma intención que pulsarlo en el
+    // mapa: detener el giro. Si no, el vuelo acaba y el globo se lleva el
+    // sismo fuera de la vista mientras se está leyendo su ficha.
+    girandoRef.current = false;
     map.flyTo({ center: [focus.lon, focus.lat], zoom: Math.max(map.getZoom(), 4), speed: 0.8 });
     const q = quakeById.current.get(focus.id);
     if (q) abrirPopup(map, q, lang);
