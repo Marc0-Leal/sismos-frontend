@@ -11,6 +11,11 @@ export const BASEMAPS = [
     i18n: 'basemap_dark',
     solido: false, // sismos etéreos: máximo contraste para detectar actividad
     placasColor: '#22d3ee', // cian brillante: resplandece sobre el negro
+    // En dark-matter el agua (#2C353C) es MAS CLARA que la tierra (#0e0e0e).
+    // A nivel de calle funciona, pero en un globo visto desde el espacio da un
+    // planeta gris con continentes negros. Se repinta de azul profundo: el
+    // oceano pasa a leerse como agua y los sismos resaltan mucho mas.
+    aguaColor: '#122536',
     style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
   },
   {

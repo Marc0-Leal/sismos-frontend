@@ -21,6 +21,20 @@ export async function fetchEarthquakes({ minMag, maxMag, hours, limit = 500 } = 
 }
 
 /**
+ * Total de sismos almacenados en la base, sin filtrar.
+ *
+ * Sirve para dar contexto: el mapa muestra los de la ventana elegida (unos
+ * cientos), pero detrás hay decenas de miles acumulados desde que arrancó la
+ * ingesta. Sin este dato, "383 sismos" parece ser todo lo que existe.
+ */
+export async function fetchTotal() {
+  const res = await fetch(`${API_BASE}/api/quakes/earthquakes/count`);
+  if (!res.ok) throw new Error(`Gateway respondió ${res.status}`);
+  const data = await res.json();
+  return data.total ?? null;
+}
+
+/**
  * Suscripción en tiempo real (SSE) a sismos nuevos.
  * @param {(quake: any) => void} onEarthquake
  * @param {(state: 'open'|'error') => void} [onState]

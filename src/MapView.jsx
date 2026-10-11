@@ -172,6 +172,12 @@ function aplicarCapasSismos(map, basemap) {
     console.warn('[MapView] Globo/cielo no disponibles, se sigue en plano:', err.message);
   }
 
+  // Repinta el agua si el mapa base lo pide (ver comentario en basemaps.js).
+  // Se comprueba que la capa exista: el estilo de satelite no tiene ninguna.
+  if (basemap.aguaColor && map.getLayer('water')) {
+    map.setPaintProperty('water', 'fill-color', basemap.aguaColor);
+  }
+
   if (!map.getSource(SOURCE_ID)) {
     map.addSource(SOURCE_ID, { type: 'geojson', data: toGeoJson([]) });
   }
@@ -311,7 +317,7 @@ export default function MapView({
   const quakeById = useRef(new Map()); // id -> datos (para popups y re-traducción)
   const langRef = useRef(lang); // idioma actual accesible desde los manejadores
   const quakesRef = useRef(quakes); // última lista recibida
-  const tsunamiTipRef = useRef(null);
+  const fichaTipRef = useRef(null);
   const placasTipRef = useRef(null);
   const interactuandoRef = useRef(false); // ¿el usuario está manipulando el mapa?
   const girandoRef = useRef(true); // ¿rotación automática activa?
@@ -355,12 +361,12 @@ export default function MapView({
       console.error('[MapView] Error de MapLibre:', e.error?.message ?? e);
     });
 
-    // Globo flotante reutilizable para el aviso de tsunami (no roba el foco ni
-    // cierra el popup de detalle).
-    tsunamiTipRef.current = new Popup({
+    // Globo flotante reutilizable para la ficha al pasar el cursor. No roba el
+    // foco ni cierra el popup de detalle que se abre al hacer clic.
+    fichaTipRef.current = new Popup({
       closeButton: false,
       closeOnClick: false,
-      className: 'tsunami-tip',
+      className: 'quake-tip',
       offset: 12,
     });
 
@@ -414,21 +420,29 @@ export default function MapView({
     // Los manejadores se registran UNA sola vez: sobreviven a los cambios de
     // estilo porque se enlazan por id de capa, y la capa se vuelve a crear con
     // el mismo id.
+    // Al pasar el cursor por un sismo se muestra su ficha resumida, sin hacer
+    // clic. Es deliberadamente breve —magnitud y lugar— porque el detalle
+    // completo (profundidad, fecha, enlace a USGS) ya lo da el clic: si el
+    // aviso flotante lo repitiese todo, el clic dejaría de tener sentido.
     map.on('mousemove', LAYER_ID, (e) => {
       map.getCanvas().style.cursor = 'pointer';
       const feat = e.features?.[0];
-      if (feat?.properties.tsunami) {
-        tsunamiTipRef.current
-          .setLngLat(feat.geometry.coordinates)
-          .setHTML(esc(t(langRef.current, 'tooltip_tsunami')))
-          .addTo(map);
-      } else {
-        tsunamiTipRef.current?.remove();
-      }
+      if (!feat) return;
+      const q = quakeById.current.get(feat.properties.id);
+      if (!q) return;
+
+      const mag = q.magnitude != null ? `M ${esc(q.magnitude)}` : 'M ?';
+      const aviso = q.tsunami
+        ? `<br/><span class="tip-tsunami">${esc(t(langRef.current, 'tooltip_tsunami'))}</span>`
+        : '';
+      fichaTipRef.current
+        .setLngLat(feat.geometry.coordinates)
+        .setHTML(`<strong>${mag}</strong> · ${esc(q.place ?? '—')}${aviso}`)
+        .addTo(map);
     });
     map.on('mouseleave', LAYER_ID, () => {
       map.getCanvas().style.cursor = '';
-      tsunamiTipRef.current?.remove();
+      fichaTipRef.current?.remove();
     });
     // Al pasar el cursor por un borde de placa, se muestra qué dos placas
     // separa. Los datos solo traen códigos ("NZ-SA"): plateName() los traduce.
@@ -465,7 +479,7 @@ export default function MapView({
 
     return () => {
       popupRef.current?.remove();
-      tsunamiTipRef.current?.remove();
+      fichaTipRef.current?.remove();
       placasTipRef.current?.remove();
       map.remove();
       listoRef.current = false;
@@ -481,7 +495,7 @@ export default function MapView({
     const bm = BASEMAPS.find((b) => b.id === basemap) ?? BASEMAPS[0];
     basemapRef.current = basemap;
     popupRef.current?.remove();
-    tsunamiTipRef.current?.remove();
+    fichaTipRef.current?.remove();
     // `diff: false` es CLAVE. Por defecto setStyle compara el estilo viejo con
     // el nuevo y aplica solo las diferencias. Entre dos estilos parecidos (p. ej.
     // los dos de Carto, que comparten nombre de fuente y capas) ese atajo se
