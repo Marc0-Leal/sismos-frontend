@@ -499,3 +499,60 @@ body,
     min-height: 38px;
   }
 }
+
+/* --- Gráfica de sismos por continente --------------------------------------
+   Barras hechas con dos <span> y un ancho en porcentaje. Sin librería de
+   gráficos: para un ranking de siete filas, añadir una dependencia costaría
+   más de lo que resuelve.                                                    */
+.chart {
+  margin-top: 18px;
+}
+.chart h2 {
+  margin: 0 0 10px;
+}
+.chart-row {
+  display: grid;
+  /* La etiqueta tiene ancho fijo para que todas las barras arranquen
+     alineadas: si no, el ojo no puede comparar sus longitudes. */
+  grid-template-columns: 96px 1fr 34px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+.chart-lbl {
+  color: #aeb8c6;
+  /* Nombres largos como "Aguas internacionales" se recortan en vez de
+     descolocar la rejilla. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chart-bar {
+  height: 9px;
+  border-radius: 5px;
+  background: #1f2937;
+  overflow: hidden;
+}
+.chart-fill {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+  background: #22d3ee;
+  transition: width 0.3s ease;
+}
+/* Los sismos oceánicos no son un continente: se distinguen con otro tono. */
+.chart-fill.mar {
+  background: #3b82f6;
+}
+.chart-n {
+  color: #eef2f7;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.chart-note {
+  margin: 10px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #6b7280;
+}

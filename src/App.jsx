@@ -6,6 +6,7 @@ import { fetchEarthquakes, fetchTotal, subscribeToEarthquakes } from './api.js';
 import { LEGEND, colorForQuake, categoryOf, TERREMOTO_MIN } from './quakeStyle.js';
 import { computeStats } from './stats.js';
 import { LANGS, t } from './i18n.js';
+import { cargarContinentes, contarPorContinente, claveI18n, OCEANO } from './continents.js';
 
 // Tope de seguridad. No es el criterio de que se muestra (eso lo decide la
 // ventana temporal), sino un cinturon para que una consulta no pueda devolver
@@ -48,6 +49,9 @@ export default function App() {
   // Total historico en la base. Da contexto: el mapa ensena los de la ventana
   // elegida, pero detras hay decenas de miles acumulados.
   const [total, setTotal] = useState(null);
+  // Los poligonos de continentes se descargan aparte (151 KB). Hasta que
+  // llegan, la grafica no se dibuja; el resto de la app no espera por ella.
+  const [continentesListos, setContinentesListos] = useState(false);
   const byId = useRef(new Set());
 
   // Carga (REST vía gateway). Se repite al cambiar la ventana temporal.
@@ -77,6 +81,13 @@ export default function App() {
     fetchTotal()
       .then(setTotal)
       .catch(() => setTotal(null));
+  }, []);
+
+  // Poligonos de continentes, para repartir los sismos por zona.
+  useEffect(() => {
+    cargarContinentes()
+      .then(() => setContinentesListos(true))
+      .catch(() => setContinentesListos(false));
   }, []);
 
   // Suscripción en tiempo real (SSE vía gateway).
@@ -138,6 +149,14 @@ export default function App() {
   }, [visibles, sortBy]);
 
   const stats = useMemo(() => computeStats(visibles), [visibles]);
+
+  // Reparto por continente de los sismos visibles. Se recalcula solo cuando
+  // cambian los filtros, no en cada render: clasificar mil puntos contra los
+  // poligonos cuesta unas decimas de segundo.
+  const porContinente = useMemo(
+    () => (continentesListos ? contarPorContinente(visibles) : []),
+    [visibles, continentesListos]
+  );
 
   const liveLabel =
     liveState === 'live'
@@ -338,6 +357,25 @@ export default function App() {
               <span className="stat-num">{stats.tsunamis}</span>
               <span className="stat-lbl">{t(lang, 'stat_tsunami')}</span>
             </div>
+          </div>
+        )}
+
+        {porContinente.length > 0 && (
+          <div className="chart">
+            <h2>{t(lang, 'chart_continents')}</h2>
+            {porContinente.map((c) => (
+              <div key={c.id} className="chart-row">
+                <span className="chart-lbl">{t(lang, claveI18n(c.id))}</span>
+                <span className="chart-bar">
+                  <span
+                    className={c.id === OCEANO ? 'chart-fill mar' : 'chart-fill'}
+                    style={{ width: `${(100 * c.n) / porContinente[0].n}%` }}
+                  />
+                </span>
+                <span className="chart-n">{c.n}</span>
+              </div>
+            ))}
+            <p className="chart-note">{t(lang, 'chart_note')}</p>
           </div>
         )}
 
