@@ -6,7 +6,7 @@ import { fetchEarthquakes, fetchTotal, subscribeToEarthquakes } from './api.js';
 import { LEGEND, colorForQuake, categoryOf, TERREMOTO_MIN } from './quakeStyle.js';
 import { computeStats } from './stats.js';
 import { LANGS, t } from './i18n.js';
-import { cargarContinentes, contarPorContinente, claveI18n } from './continents.js';
+import { cargarContinentes, contarPorContinente, claveI18n, OCEANO } from './continents.js';
 
 // Tope de seguridad. No es el criterio de que se muestra (eso lo decide la
 // ventana temporal), sino un cinturon para que una consulta no pueda devolver
@@ -368,7 +368,7 @@ export default function App() {
                 <span className="chart-lbl">{t(lang, claveI18n(c.id))}</span>
                 <span className="chart-bar">
                   <span
-                    className={c.id === 'oceano' ? 'chart-fill mar' : 'chart-fill'}
+                    className={c.id === OCEANO ? 'chart-fill mar' : 'chart-fill'}
                     style={{ width: `${(100 * c.n) / porContinente[0].n}%` }}
                   />
                 </span>

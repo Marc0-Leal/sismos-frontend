@@ -63,7 +63,8 @@ const T = {
     cont_oceania: 'Oceanía',
     cont_antarctica: 'Antártida',
     cont_oceano: 'Aguas internacionales',
-    chart_note: 'USGS detecta microsismos en EE. UU. que en otras zonas no se registran. Sube la magnitud mínima a 4 para ver el reparto real.',
+    chart_note:
+      'USGS detecta microsismos en EE. UU. que en otras zonas no se registran. Sube la magnitud mínima a 4 para ver el reparto real.',
     plate_boundary: 'Borde de placas',
     panel_show: 'Mostrar filtros',
     panel_hide: 'Ocultar filtros',
@@ -124,7 +125,8 @@ const T = {
     cont_oceania: 'Oceania',
     cont_antarctica: 'Antarctica',
     cont_oceano: 'International waters',
-    chart_note: 'USGS detects micro-earthquakes in the US that go unrecorded elsewhere. Raise the minimum magnitude to 4 to see the real split.',
+    chart_note:
+      'USGS detects micro-earthquakes in the US that go unrecorded elsewhere. Raise the minimum magnitude to 4 to see the real split.',
     plate_boundary: 'Plate boundary',
     panel_show: 'Show filters',
     panel_hide: 'Hide filters',
@@ -185,7 +187,8 @@ const T = {
     cont_oceania: 'Oceania',
     cont_antarctica: 'Antártida',
     cont_oceano: 'Águas internacionais',
-    chart_note: 'O USGS deteta microssismos nos EUA que noutras zonas não são registados. Aumente a magnitude mínima para 4 para ver a distribuição real.',
+    chart_note:
+      'O USGS deteta microssismos nos EUA que noutras zonas não são registados. Aumente a magnitude mínima para 4 para ver a distribuição real.',
     plate_boundary: 'Limite de placas',
     panel_show: 'Mostrar filtros',
     panel_hide: 'Ocultar filtros',
@@ -246,7 +249,8 @@ const T = {
     cont_oceania: 'Océanie',
     cont_antarctica: 'Antarctique',
     cont_oceano: 'Eaux internationales',
-    chart_note: 'L’USGS détecte des microséismes aux États-Unis qui ne sont pas enregistrés ailleurs. Augmentez la magnitude minimale à 4 pour voir la répartition réelle.',
+    chart_note:
+      'L’USGS détecte des microséismes aux États-Unis qui ne sont pas enregistrés ailleurs. Augmentez la magnitude minimale à 4 pour voir la répartition réelle.',
     plate_boundary: 'Limite de plaques',
     panel_show: 'Afficher les filtres',
     panel_hide: 'Masquer les filtres',
